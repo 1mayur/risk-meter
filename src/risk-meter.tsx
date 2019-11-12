@@ -9,6 +9,8 @@ type ChartProps = {
 
 const RiskMeter: React.FunctionComponent<ChartProps> = props => {
   const chartContainer = React.createRef<HTMLDivElement>();
+  let x = null;
+  let calculatedHeight = 0;
 
   const prepareChart = () => {
     if (!props.value) return;
@@ -21,8 +23,9 @@ const RiskMeter: React.FunctionComponent<ChartProps> = props => {
     const height = chartHeight - margin.top - margin.bottom;
     const meterStroke = props.meterBroadness || 8;
     const markWidth = props.markerWidth || 8;
+    calculatedHeight = height - markWidth - meterStroke;
 
-    const x = d3
+    x = d3
       .scaleLinear()
       .rangeRound([0, width])
       .domain([0, 100]);
@@ -76,24 +79,29 @@ const RiskMeter: React.FunctionComponent<ChartProps> = props => {
     svg
       .append("polygon")
       .attr("points", `0 0, ${markWidth} ${markWidth}, ${markWidth * 2} 0, 0 0`)
-      .attr(
-        "transform",
-        `translate(${x(props.value)}, ${height - markWidth - meterStroke})`
-      )
+      .attr("transform", `translate(${x(props.value)}, ${calculatedHeight})`)
       .attr("color", "black");
 
     svg.append("g").call(xAxis);
   };
 
+  const updateValue = newValue => {
+    d3.select(chartContainer.current)
+      .select("polygon")
+      .transition()
+      .duration(200)
+      .attr("transform", `translate(${x(newValue)}, ${calculatedHeight})`);
+  };
+
   React.useEffect(() => {
     prepareChart();
-    return () => {};
-  });
-  return (
-    <div className="App">
-      <div className="chart-container" ref={chartContainer as any} />
-    </div>
-  );
+  }, [props.markerWidth, props.meterBroadness]);
+
+  React.useEffect(() => {
+    updateValue(props.value);
+  }, [props.value]);
+
+  return <div className="chart-container" ref={chartContainer as any} />;
 };
 
 export default RiskMeter;

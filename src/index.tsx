@@ -6,7 +6,7 @@ import RiskMeter from "./risk-meter";
 const rootElement = document.getElementById("root");
 
 render(
-  <div>
+  <div className="App">
     <RiskMeter value={50} markerWidth={8} meterBroadness={6} />
   </div>,
   rootElement
